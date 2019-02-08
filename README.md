@@ -1,6 +1,6 @@
 # UBC-RMP-Scraper
 
-Scrapes UBC Course web page, and stores it as JSON to be used for [UBC-RMP extension](https://github.com/jumbosushi/ubc-rmp)
+Scrapes [UBC Course web page](https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea), and stores it as JSON to be used for [UBC-RMP extension](https://github.com/jumbosushi/ubc-rmp)
 
 JSON Format
 ```json
