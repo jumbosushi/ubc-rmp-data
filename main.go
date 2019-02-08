@@ -172,14 +172,20 @@ func main() {
 	// sectionCollector callbacks
 
 	var curSection string
+	instrPath := "/cs/courseschedule?pname=inst"
 
 	sectionCollector.OnRequest(func(r *colly.Request) {
 		curSection = getURLParam(r, "section")
+		fmt.Println(curSection)
 		ubcCourseInfo[curDepartment][curCourse][curSection] = make(Instructor)
 	})
 
-	courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		if strings.HasPrefix(e.Attr("href"), coursePath) {
+	sectionCollector.OnHTML("td > a[href]", func(e *colly.HTMLElement) {
+		if strings.HasPrefix(e.Attr("href"), instrPath) {
+			instrName := e.Text
+			fmt.Println(instrName)
+			tmpInst := InstructorData{}
+			ubcCourseInfo[curDepartment][curCourse][curSection][instrName] = tmpInst
 			writeData(ubcCourseInfo)
 		}
 	})
