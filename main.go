@@ -1,8 +1,9 @@
 package main
 
 import (
-	_ "encoding/json"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 	"time"
@@ -12,8 +13,8 @@ import (
 	_ "github.com/gocolly/colly/debug"
 )
 
-// Instructor ...
-type Instructor struct {
+// InstructorData ...
+type InstructorData struct {
 	Name           string `json:"name"`
 	Difficulty     int    `json:"difficulty"`
 	Overall        int    `json:"overall"`
@@ -22,6 +23,9 @@ type Instructor struct {
 
 // How to convert map to json
 // https://stackoverflow.com/questions/24652775/convert-go-map-to-json
+
+// Instructor ...
+type Instructor map[string]InstructorData
 
 // Section ...
 type Section map[string]Instructor
@@ -43,12 +47,43 @@ func getFullURL(path string) string {
 	return coursesPrefix + path
 }
 
-func main() {
-	// cpsc := make(Department)
-	// cpsc["CPSC"] = make(Course)
-	// cpsc["CPSC"]["110"] = make(Section)
-	// cpsc["CPSC"]["110"]["001"] = Instructor{}
+func getSubjectPath(subj string) string {
+	subjectPrefix := "/cs/courseschedule?pname=subjarea&tname=subj-"
+	return subjectPrefix + subj
+}
 
+func isAllowedActivity(activity string) bool {
+	var allowedSectionActivity = [...]string{
+		"Lecture",
+		"Lecture-Seminar",
+		"Lecture-Laboratory",
+		"Distance Education",
+		"Laboratory",
+		"Practicum",
+		"Seminar",
+	}
+
+	for _, allowed := range allowedSectionActivity {
+		if allowed == activity {
+			return true
+		}
+	}
+	return false
+}
+
+func writeData(ubcCourseInfo Department) {
+	jsonString, err := json.Marshal(ubcCourseInfo)
+	err = ioutil.WriteFile("/tmp/dat1.json", jsonString, 0644)
+	checkIO(err)
+}
+
+func checkIO(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func main() {
 	c := colly.NewCollector(
 		// Allow crawling to be done in parallel / async
 		// colly.Async(true),
@@ -73,7 +108,7 @@ func main() {
 	// Create another collectors
 	departmentCollector := c.Clone()
 	courseCollector := c.Clone()
-	// sectionCollector := c.Clone()
+	sectionCollector := c.Clone()
 
 	// =======================
 	// All courses page callbacks
@@ -81,7 +116,8 @@ func main() {
 	ubcCourseInfo := make(Department)
 	coursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
 
-	departmentPath := "/cs/courseschedule?pname=subjarea&tname=subj-department"
+	departmentPath := getSubjectPath("department")
+
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If department link
 		if strings.HasPrefix(e.Attr("href"), departmentPath) {
@@ -94,17 +130,17 @@ func main() {
 	// departmentCollector callbacks
 
 	var curDepartment string
-	coursePath := "/cs/courseschedule?pname=subjarea&tname=subj-course"
+	coursePath := getSubjectPath("course")
 
 	departmentCollector.OnRequest(func(r *colly.Request) {
 		curDepartment = getURLParam(r, "dept")
+		ubcCourseInfo[curDepartment] = make(Course)
 	})
 
 	departmentCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If course link
 		if strings.HasPrefix(e.Attr("href"), coursePath) {
 			fmt.Println(curDepartment)
-			ubcCourseInfo[curDepartment] = make(Course)
 			courseURL := getFullURL(e.Attr("href"))
 			courseCollector.Visit(courseURL)
 		}
@@ -114,44 +150,39 @@ func main() {
 	// courseCollector callbacks
 
 	var curCourse string
+	// sectionPath := getSubjectPath("section")
 
 	courseCollector.OnRequest(func(r *colly.Request) {
 		curCourse = getURLParam(r, "course")
+		ubcCourseInfo[curDepartment][curCourse] = make(Section)
 	})
 
-	courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		// If course link
-		ubcCourseInfo[curDepartment][curCourse] = make(Section)
-		if strings.HasPrefix(e.Attr("href"), coursePath) {
-			fmt.Println(curCourse)
+	// Class with that includes "section" (ex. section1, section2, etc)
+	courseCollector.OnHTML("tr[class*=section]", func(tr *colly.HTMLElement) {
+		sectionLink := tr.ChildAttr("td:nth-child(2) > a", "href")
+		sectionActivity := tr.ChildText("td:nth-child(3)")
+
+		if isAllowedActivity(sectionActivity) {
+			sectionURL := getFullURL(sectionLink)
+			sectionCollector.Visit(sectionURL)
 		}
 	})
 
 	// =======================
 	// sectionCollector callbacks
 
-	// var curSection string
+	var curSection string
 
-	// sectionCollector.OnRequest(func(r *colly.Request) {
-	// curSection = getURLParam(r, "dept")
-	// })
+	sectionCollector.OnRequest(func(r *colly.Request) {
+		curSection = getURLParam(r, "section")
+		ubcCourseInfo[curDepartment][curCourse][curSection] = make(Instructor)
+	})
 
-	// courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
-	// if strings.HasPrefix(e.Attr("href"), coursePath) {
-	// fmt.Println(curDepartment)
-	// }
-	// })
-
-	// var allowedCourseActivity = [...]string{
-	// "Lecture",
-	// "Lecture-Seminar",
-	// "Lecture-Laboratory",
-	// "Distance Education",
-	// "Laboratory",
-	// "Practicum",
-	// "Seminar",
-	// }
+	courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		if strings.HasPrefix(e.Attr("href"), coursePath) {
+			writeData(ubcCourseInfo)
+		}
+	})
 
 	c.Visit(coursesURL)
-
 }
