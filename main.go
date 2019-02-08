@@ -32,9 +32,6 @@ type Course map[string]Section
 // Department ...
 type Department map[string]Course
 
-// Info ...
-type Info map[string]Department
-
 func getURLParam(r *colly.Request, param string) string {
 	URL := r.URL.String()
 	URLSplit := strings.Split(URL, param+"=")
@@ -81,14 +78,13 @@ func main() {
 	// =======================
 	// All courses page callbacks
 
-	ubcCourseInfo := make(Info)
+	ubcCourseInfo := make(Department)
 	coursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
 
 	departmentPath := "/cs/courseschedule?pname=subjarea&tname=subj-department"
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If department link
 		if strings.HasPrefix(e.Attr("href"), departmentPath) {
-			ubcCourseInfo[e.Text] = make(Department)
 			deptURL := getFullURL(e.Attr("href"))
 			departmentCollector.Visit(deptURL)
 		}
@@ -97,17 +93,18 @@ func main() {
 	// =======================
 	// departmentCollector callbacks
 
-	var currentDepartment string
+	var curDepartment string
 	coursePath := "/cs/courseschedule?pname=subjarea&tname=subj-course"
 
 	departmentCollector.OnRequest(func(r *colly.Request) {
-		currentDepartment = getURLParam(r, "dept")
+		curDepartment = getURLParam(r, "dept")
 	})
 
 	departmentCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If course link
 		if strings.HasPrefix(e.Attr("href"), coursePath) {
-			fmt.Println(currentDepartment)
+			fmt.Println(curDepartment)
+			ubcCourseInfo[curDepartment] = make(Course)
 			courseURL := getFullURL(e.Attr("href"))
 			courseCollector.Visit(courseURL)
 		}
@@ -116,31 +113,32 @@ func main() {
 	// =======================
 	// courseCollector callbacks
 
-	var currentCourse string
+	var curCourse string
 
 	courseCollector.OnRequest(func(r *colly.Request) {
-		currentCourse = getURLParam(r, "course")
+		curCourse = getURLParam(r, "course")
 	})
 
 	courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If course link
+		ubcCourseInfo[curDepartment][curCourse] = make(Section)
 		if strings.HasPrefix(e.Attr("href"), coursePath) {
-			fmt.Println(currentCourse)
+			fmt.Println(curCourse)
 		}
 	})
 
 	// =======================
 	// sectionCollector callbacks
 
-	// var currentSection string
+	// var curSection string
 
 	// sectionCollector.OnRequest(func(r *colly.Request) {
-	// currentSection = getURLParam(r, "dept")
+	// curSection = getURLParam(r, "dept")
 	// })
 
 	// courseCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 	// if strings.HasPrefix(e.Attr("href"), coursePath) {
-	// fmt.Println(currentDepartment)
+	// fmt.Println(curDepartment)
 	// }
 	// })
 
