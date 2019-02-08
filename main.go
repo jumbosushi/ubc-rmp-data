@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
-	_ "github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
-	_ "github.com/gocolly/colly/debug"
 )
 
 // InstructorData ...
@@ -72,8 +72,12 @@ func isAllowedActivity(activity string) bool {
 }
 
 func writeData(ubcCourseInfo Department) {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
 	jsonString, err := json.Marshal(ubcCourseInfo)
-	err = ioutil.WriteFile("/tmp/dat1.json", jsonString, 0644)
+	err = ioutil.WriteFile(dir+"/ubcrmp.json", jsonString, 0644)
 	checkIO(err)
 }
 
@@ -120,8 +124,9 @@ func main() {
 
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If department link
-		if strings.HasPrefix(e.Attr("href"), departmentPath) {
-			deptURL := getFullURL(e.Attr("href"))
+		deptLink := e.Attr("href")
+		if strings.HasPrefix(deptLink, departmentPath) {
+			deptURL := getFullURL(deptLink)
 			departmentCollector.Visit(deptURL)
 		}
 	})
@@ -134,14 +139,16 @@ func main() {
 
 	departmentCollector.OnRequest(func(r *colly.Request) {
 		curDepartment = getURLParam(r, "dept")
+		fmt.Printf("%s\n", curDepartment)
 		ubcCourseInfo[curDepartment] = make(Course)
 	})
 
 	departmentCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If course link
-		if strings.HasPrefix(e.Attr("href"), coursePath) {
+		courseLink := e.Attr("href")
+		if strings.HasPrefix(courseLink, coursePath) {
 			fmt.Println(curDepartment)
-			courseURL := getFullURL(e.Attr("href"))
+			courseURL := getFullURL(courseLink)
 			courseCollector.Visit(courseURL)
 		}
 	})
@@ -150,10 +157,11 @@ func main() {
 	// courseCollector callbacks
 
 	var curCourse string
-	// sectionPath := getSubjectPath("section")
+	sectionPath := getSubjectPath("section")
 
 	courseCollector.OnRequest(func(r *colly.Request) {
 		curCourse = getURLParam(r, "course")
+		fmt.Printf("  %s\n", curCourse)
 		ubcCourseInfo[curDepartment][curCourse] = make(Section)
 	})
 
@@ -162,7 +170,8 @@ func main() {
 		sectionLink := tr.ChildAttr("td:nth-child(2) > a", "href")
 		sectionActivity := tr.ChildText("td:nth-child(3)")
 
-		if isAllowedActivity(sectionActivity) {
+		if isAllowedActivity(sectionActivity) &&
+			strings.HasPrefix(sectionLink, sectionPath) {
 			sectionURL := getFullURL(sectionLink)
 			sectionCollector.Visit(sectionURL)
 		}
@@ -176,14 +185,14 @@ func main() {
 
 	sectionCollector.OnRequest(func(r *colly.Request) {
 		curSection = getURLParam(r, "section")
-		fmt.Println(curSection)
+		fmt.Printf("    %s\n", curSection)
 		ubcCourseInfo[curDepartment][curCourse][curSection] = make(Instructor)
 	})
 
 	sectionCollector.OnHTML("td > a[href]", func(e *colly.HTMLElement) {
 		if strings.HasPrefix(e.Attr("href"), instrPath) {
 			instrName := e.Text
-			fmt.Println(instrName)
+
 			tmpInst := InstructorData{}
 			ubcCourseInfo[curDepartment][curCourse][curSection][instrName] = tmpInst
 			writeData(ubcCourseInfo)
