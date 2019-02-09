@@ -11,30 +11,12 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/jumbosushi/ubc-rmp-scraper/model"
+	"github.com/jumbosushi/ubc-rmp-scraper/rmp"
 )
-
-// InstructorData ...
-type InstructorData struct {
-	Name           string `json:"name"`
-	Difficulty     int    `json:"difficulty"`
-	Overall        int    `json:"overall"`
-	WouldTakeAgain string `json:"would_take_gain"`
-}
 
 // How to convert map to json
 // https://stackoverflow.com/questions/24652775/convert-go-map-to-json
-
-// Instructor ...
-type Instructor map[string]InstructorData
-
-// Section ...
-type Section map[string]Instructor
-
-// Course ...
-type Course map[string]Section
-
-// Department ...
-type Department map[string]Course
 
 func getURLParam(r *colly.Request, param string) string {
 	URL := r.URL.String()
@@ -71,7 +53,7 @@ func isAllowedActivity(activity string) bool {
 	return false
 }
 
-func writeData(ubcCourseInfo Department) {
+func writeData(ubcCourseInfo model.Department) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatal(err)
@@ -88,6 +70,7 @@ func checkIO(e error) {
 }
 
 func main() {
+	rmp.MakeRequest()
 	c := colly.NewCollector(
 		// Allow crawling to be done in parallel / async
 		// colly.Async(true),
@@ -117,7 +100,7 @@ func main() {
 	// =======================
 	// All courses page callbacks
 
-	ubcCourseInfo := make(Department)
+	ubcCourseInfo := make(model.Department)
 	coursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
 
 	departmentPath := getSubjectPath("department")
@@ -140,14 +123,13 @@ func main() {
 	departmentCollector.OnRequest(func(r *colly.Request) {
 		curDepartment = getURLParam(r, "dept")
 		fmt.Printf("%s\n", curDepartment)
-		ubcCourseInfo[curDepartment] = make(Course)
+		ubcCourseInfo[curDepartment] = make(model.Course)
 	})
 
 	departmentCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// If course link
 		courseLink := e.Attr("href")
 		if strings.HasPrefix(courseLink, coursePath) {
-			fmt.Println(curDepartment)
 			courseURL := getFullURL(courseLink)
 			courseCollector.Visit(courseURL)
 		}
@@ -162,7 +144,7 @@ func main() {
 	courseCollector.OnRequest(func(r *colly.Request) {
 		curCourse = getURLParam(r, "course")
 		fmt.Printf("  %s\n", curCourse)
-		ubcCourseInfo[curDepartment][curCourse] = make(Section)
+		ubcCourseInfo[curDepartment][curCourse] = make(model.Section)
 	})
 
 	// Class with that includes "section" (ex. section1, section2, etc)
@@ -186,14 +168,14 @@ func main() {
 	sectionCollector.OnRequest(func(r *colly.Request) {
 		curSection = getURLParam(r, "section")
 		fmt.Printf("    %s\n", curSection)
-		ubcCourseInfo[curDepartment][curCourse][curSection] = make(Instructor)
+		ubcCourseInfo[curDepartment][curCourse][curSection] = make(model.Instructor)
 	})
 
 	sectionCollector.OnHTML("td > a[href]", func(e *colly.HTMLElement) {
 		if strings.HasPrefix(e.Attr("href"), instrPath) {
 			instrName := e.Text
 
-			tmpInst := InstructorData{}
+			tmpInst := model.InstructorData{}
 			ubcCourseInfo[curDepartment][curCourse][curSection][instrName] = tmpInst
 			writeData(ubcCourseInfo)
 		}
