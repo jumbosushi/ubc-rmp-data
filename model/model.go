@@ -2,8 +2,7 @@ package model
 
 // InstructorData ...
 type InstructorData struct {
-	Dept           string `json:"dept"`
-	Lecture        string `json:"lecture"`
+	UbcID          int    `json:"ubcid"`
 	Name           string `json:"name"`
 	Difficulty     int    `json:"difficulty"`
 	Overall        int    `json:"overall"`
@@ -11,10 +10,10 @@ type InstructorData struct {
 }
 
 // Instructor ...
-type Instructor map[string]InstructorData
+type Instructor map[int]InstructorData
 
 // Section ...
-type Section map[string]string
+type Section map[string]int
 
 // Course ...
 type Course map[string]Section

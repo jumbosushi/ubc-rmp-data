@@ -5,23 +5,36 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/jumbosushi/ubc-rmp-scraper/model"
-	"github.com/jumbosushi/ubc-rmp-scraper/rmp"
+	_ "github.com/jumbosushi/ubc-rmp-scraper/rmp"
 )
 
 // How to convert map to json
 // https://stackoverflow.com/questions/24652775/convert-go-map-to-json
 
+func getInstrID(path string) int {
+	URL := getFullURL(path)
+	u, err := url.Parse(URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	ubcidStr := q.Get("ubcid")
+	ubcidInt, err := strconv.Atoi(ubcidStr)
+	return ubcidInt
+}
+
 func getURLParam(r *colly.Request, param string) string {
-	URL := r.URL.String()
-	URLSplit := strings.Split(URL, param+"=")
-	return URLSplit[1]
+	q := r.URL.Query()
+	return q.Get(param)
 }
 
 func getFullURL(path string) string {
@@ -76,12 +89,7 @@ func checkIO(e error) {
 
 func main() {
 
-	f, err := os.Create("data/dupLog.txt")
-	checkIO(err)
-
-	defer f.Close()
-
-	rmp.MakeRequest()
+	// rmp.MakeRequest()
 	c := colly.NewCollector(
 		// Allow crawling to be done in parallel / async
 		// colly.Async(true),
@@ -112,9 +120,8 @@ func main() {
 	// All courses page callbacks
 
 	ubcInstrInfo := make(model.Instructor)
-
 	ubcCourseInfo := make(model.Department)
-	coursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
+	allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
 
 	departmentPath := getSubjectPath("department")
 
@@ -187,29 +194,25 @@ func main() {
 	sectionCollector.OnHTML("td > a[href]", func(e *colly.HTMLElement) {
 		if strings.HasPrefix(e.Attr("href"), instrPath) {
 			instrName := e.Text
+			instrUbcID := getInstrID(e.Attr("href"))
 
-			// tmpInst := model.InstructorData{}
-			// ubcCourseInfo[curDepartment][curCourse][curSection][instrName] = tmpInst
-			ubcCourseInfo[curDepartment][curCourse][curSection] = instrName
+			ubcCourseInfo[curDepartment][curCourse][curSection] = instrUbcID
 			writeJSON(ubcCourseInfo, "ubcrmpCourse.json")
-			// If name already exist
-			lecture := fmt.Sprintf("%s %s %s %s", curDepartment, curCourse, curSection, instrName)
-			if data, ok := ubcInstrInfo[instrName]; ok {
-				if data.Dept != curDepartment {
-					msg := fmt.Sprintf("%s\n  dup in %s\n", lecture, data.Lecture)
-					_, err := f.Write([]byte(msg))
-					checkIO(err)
-				}
-			} else {
-				instrData := model.InstructorData{}
-				instrData.Name = instrName
-				instrData.Dept = curDepartment
-				instrData.Lecture = lecture
-				ubcInstrInfo[instrName] = instrData
-				writeJSON(ubcInstrInfo, "ubcrmpInstr.json")
+
+			// If record already exists, skip
+			if _, ok := ubcInstrInfo[instrUbcID]; ok {
+				return
 			}
+
+			// Init InstructorData
+			instrData := model.InstructorData{}
+			instrData.Name = instrName
+			instrData.UbcID = instrUbcID
+
+			ubcInstrInfo[instrUbcID] = instrData
+			writeJSON(ubcInstrInfo, "ubcrmpInstr.json")
 		}
 	})
 
-	c.Visit(coursesURL)
+	c.Visit(allCoursesURL)
 }
