@@ -1,4 +1,4 @@
-package model
+package main
 
 // InstructorData ...
 type InstructorData struct {

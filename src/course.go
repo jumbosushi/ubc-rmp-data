@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
-	"github.com/jumbosushi/ubc-rmp-scraper/model"
-	_ "github.com/jumbosushi/ubc-rmp-scraper/rmp"
 )
 
 // How to convert map to json
@@ -71,7 +69,7 @@ func getFilePath(fname string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return dir + "/data/" + fname
+	return dir + "/../data/" + fname
 }
 
 func writeJSON(class interface{}, fname string) {
@@ -87,8 +85,7 @@ func checkIO(e error) {
 	}
 }
 
-func main() {
-
+func buildCourseJSON() {
 	// rmp.MakeRequest()
 	c := colly.NewCollector(
 		// Allow crawling to be done in parallel / async
@@ -119,8 +116,8 @@ func main() {
 	// =======================
 	// All courses page callbacks
 
-	ubcInstrInfo := make(model.Instructor)
-	ubcCourseInfo := make(model.Department)
+	ubcInstrInfo := make(Instructor)
+	ubcCourseInfo := make(Department)
 	allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
 
 	departmentPath := getSubjectPath("department")
@@ -143,7 +140,7 @@ func main() {
 	departmentCollector.OnRequest(func(r *colly.Request) {
 		curDepartment = getURLParam(r, "dept")
 		fmt.Printf("%s\n", curDepartment)
-		ubcCourseInfo[curDepartment] = make(model.Course)
+		ubcCourseInfo[curDepartment] = make(Course)
 	})
 
 	departmentCollector.OnHTML("a[href]", func(e *colly.HTMLElement) {
@@ -164,7 +161,7 @@ func main() {
 	courseCollector.OnRequest(func(r *colly.Request) {
 		curCourse = getURLParam(r, "course")
 		fmt.Printf("  %s\n", curCourse)
-		ubcCourseInfo[curDepartment][curCourse] = make(model.Section)
+		ubcCourseInfo[curDepartment][curCourse] = make(Section)
 	})
 
 	// Class with that includes "section" (ex. section1, section2, etc)
@@ -205,7 +202,7 @@ func main() {
 			}
 
 			// Init InstructorData
-			instrData := model.InstructorData{}
+			instrData := InstructorData{}
 			instrData.Name = instrName
 			instrData.UbcID = instrUbcID
 

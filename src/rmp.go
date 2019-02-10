@@ -1,17 +1,16 @@
-package rmp
+package main
 
 import (
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
-	// "github.com/jumbosushi/ubc-rmp-scraper/model"
 )
 
 // MakeRequest ..
 func MakeRequest() {
 	// Stored in separate file as it's > 500 characters long
-	txt, err := ioutil.ReadFile("./rmp/rmpquery.txt")
+	txt, err := ioutil.ReadFile("rmpquery.txt")
 
 	if err != nil {
 		log.Fatalln(err)

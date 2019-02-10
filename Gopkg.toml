@@ -1,0 +1,5 @@
+# Need this to resolve this Colly issue
+# https://github.com/gocolly/colly/issues/280
+[[constraint]]
+  name = "github.com/gocolly/colly"
+  branch = "master"
