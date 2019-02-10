@@ -1,3 +1,4 @@
-bin: src/*.go
-	go build -o bin/ubc-rmp-scraper src/*.go
+.PHONY: bin
+bin: main.go ubcrmp/*.go
+	go build -o bin/ubc-rmp-data main.go
 
