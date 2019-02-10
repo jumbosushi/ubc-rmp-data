@@ -86,13 +86,8 @@ func checkIO(e error) {
 }
 
 func buildCourseJSON() {
-	// rmp.MakeRequest()
 	c := colly.NewCollector(
-		// Allow crawling to be done in parallel / async
-		// colly.Async(true),
 		colly.UserAgent("UBC-RMP Bot"),
-		// Attach a debugger to the collector
-		// colly.Debugger(&debug.LogDebugger{}),
 	)
 
 	c.Limit(&colly.LimitRule{

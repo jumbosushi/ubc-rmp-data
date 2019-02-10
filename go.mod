@@ -1,4 +1,4 @@
-module github.com/jumbosushi/ubc-rmp-scraper
+module github.com/jumbosushi/ubc-rmp-data
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.0 // indirect
