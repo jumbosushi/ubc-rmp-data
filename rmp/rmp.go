@@ -10,6 +10,7 @@ import (
 
 // MakeRequest ..
 func MakeRequest() {
+	// Stored in separate file as it's > 500 characters long
 	txt, err := ioutil.ReadFile("./rmp/rmpquery.txt")
 
 	if err != nil {
