@@ -3,6 +3,7 @@ package ubcrmp
 // InstructorData ...
 type InstructorData struct {
 	UbcID          int    `json:"ubcid"`
+	RmpID          int    `json:"rmpid"`
 	Name           string `json:"name"`
 	Difficulty     int    `json:"difficulty"`
 	Overall        int    `json:"overall"`
