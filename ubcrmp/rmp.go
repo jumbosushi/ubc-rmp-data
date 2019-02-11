@@ -54,7 +54,7 @@ func getTID(path string) int {
 // QueryRMP ..
 func QueryRMP() {
 	c := colly.NewCollector(
-		// colly.Async(true),
+		colly.Async(true),
 		colly.UserAgent("UBC-RMP Bot"),
 	)
 
@@ -65,7 +65,7 @@ func QueryRMP() {
 		Delay: 1 * time.Second,
 		// Add additional random delay
 		RandomDelay: 1 * time.Second,
-		// Parallelism: 2,
+		Parallelism: 2,
 	})
 
 	c.OnError(func(_ *colly.Response, err error) {
@@ -94,8 +94,8 @@ func QueryRMP() {
 		// Update RmpID
 		rmpInstr := instrMap[curInstrUbcID]
 		rmpInstr.RmpID = tid
-		log.Println(rmpInstr.RmpID)
 		log.Println(curInstrUbcID)
+		log.Println(rmpInstr.RmpID)
 		instrMap[curInstrUbcID] = rmpInstr
 	})
 
@@ -103,5 +103,6 @@ func QueryRMP() {
 		rmpQuery := getRmpQuery(instrData.Name, instrData.UbcID)
 		log.Println(rmpQuery)
 		rmpSearchCollector.Visit(rmpQuery)
+		rmpSearchCollector.Wait()
 	}
 }
