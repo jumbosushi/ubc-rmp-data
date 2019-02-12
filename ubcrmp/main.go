@@ -7,7 +7,7 @@ import (
 // Start ...
 func Start() {
 	fmt.Println("=== ubc-rmp-srcaper start ===")
-	// buildCourseJSON()
+	buildCourseJSON()
 	QueryRMP()
 	fmt.Println("=== ubc-rmp-srcaper end   ===")
 }
