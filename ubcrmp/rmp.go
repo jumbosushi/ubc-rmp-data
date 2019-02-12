@@ -136,7 +136,6 @@ func QueryRMP() {
 
 	for _, instrData := range instrMap {
 		rmpQuery := getRmpQuery(instrData.Name, instrData.UbcID)
-		log.Println(rmpQuery)
 		rmpSearchCollector.Visit(rmpQuery)
 		writeJSON(instrMap, "filledInstrData.json")
 	}
