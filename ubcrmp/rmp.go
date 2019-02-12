@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -51,10 +52,24 @@ func getTID(path string) int {
 	return tid
 }
 
+func getFullRmpURL(path string) string {
+	coursesPrefix := "https://www.ratemyprofessors.com"
+	return coursesPrefix + path
+}
+
+func round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func toFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(round(num*output)) / output
+}
+
 // QueryRMP ..
 func QueryRMP() {
 	c := colly.NewCollector(
-		colly.Async(true),
+		// colly.Async(true),
 		colly.UserAgent("UBC-RMP Bot"),
 	)
 
@@ -65,7 +80,7 @@ func QueryRMP() {
 		Delay: 1 * time.Second,
 		// Add additional random delay
 		RandomDelay: 1 * time.Second,
-		Parallelism: 2,
+		// Parallelism: 2,
 	})
 
 	c.OnError(func(_ *colly.Response, err error) {
@@ -74,11 +89,11 @@ func QueryRMP() {
 
 	_, instrMap := readJSON()
 
+	rmpSearchCollector := c.Clone()
+	rmpStatsCollector := c.Clone()
+
 	// =======================
 	// rmpSearchCollector callbacks
-
-	rmpSearchCollector := c.Clone()
-	// rmpStatsCollector := c.Clone()
 
 	var curInstrUbcID int
 
@@ -94,15 +109,35 @@ func QueryRMP() {
 		// Update RmpID
 		rmpInstr := instrMap[curInstrUbcID]
 		rmpInstr.RmpID = tid
-		log.Println(curInstrUbcID)
-		log.Println(rmpInstr.RmpID)
 		instrMap[curInstrUbcID] = rmpInstr
+		// Request stats page
+		fullRmpURL := getFullRmpURL(instrLink)
+		log.Println(fullRmpURL)
+		rmpStatsCollector.Visit(fullRmpURL)
+	})
+
+	// =======================
+	// rmpStatsCollector callbacks
+
+	rmpStatsCollector.OnHTML(".left-breakdown", func(e *colly.HTMLElement) {
+		quality := e.ChildText(".quality > div > .grade")
+		difficulty := e.ChildText(".difficulty > .grade")
+		wouldTakeAgain := e.ChildText(".takeAgain > .grade")
+		// Update values
+		rmpInstr := instrMap[curInstrUbcID]
+		tempQ, _ := strconv.ParseFloat(quality, 32)
+		rmpInstr.Overall = toFixed(tempQ, 1)
+		tempD, _ := strconv.ParseFloat(difficulty, 32)
+		rmpInstr.Difficulty = toFixed(tempD, 1)
+		rmpInstr.WouldTakeAgain = wouldTakeAgain
+		instrMap[curInstrUbcID] = rmpInstr
+		log.Println(rmpInstr)
 	})
 
 	for _, instrData := range instrMap {
 		rmpQuery := getRmpQuery(instrData.Name, instrData.UbcID)
 		log.Println(rmpQuery)
 		rmpSearchCollector.Visit(rmpQuery)
-		rmpSearchCollector.Wait()
+		writeJSON(instrMap, "filledInstrData.json")
 	}
 }

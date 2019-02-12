@@ -2,12 +2,12 @@ package ubcrmp
 
 // InstructorData ...
 type InstructorData struct {
-	UbcID          int    `json:"ubcid"`
-	RmpID          int    `json:"rmpid"`
-	Name           string `json:"name"`
-	Difficulty     int    `json:"difficulty"`
-	Overall        int    `json:"overall"`
-	WouldTakeAgain string `json:"would_take_gain"`
+	UbcID          int     `json:"ubcid"`
+	RmpID          int     `json:"rmpid"`
+	Name           string  `json:"name"`
+	Difficulty     float64 `json:"difficulty"`
+	Overall        float64 `json:"overall"`
+	WouldTakeAgain string  `json:"would_take_gain"`
 }
 
 // Instructor ...
