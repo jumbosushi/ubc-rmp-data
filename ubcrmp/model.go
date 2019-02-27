@@ -7,7 +7,7 @@ type InstructorData struct {
 	Name           string  `json:"name"`
 	Difficulty     float64 `json:"difficulty"`
 	Overall        float64 `json:"overall"`
-	WouldTakeAgain string  `json:"would_take_gain"`
+	WouldTakeAgain string  `json:"would_take_again"`
 }
 
 // Instructor ...
