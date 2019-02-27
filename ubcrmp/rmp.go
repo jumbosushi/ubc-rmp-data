@@ -27,14 +27,14 @@ func getRmpQuery(name string, ubcID int) string {
 }
 
 func readJSON() (Department, Instructor) {
-	courseJSON, _ := ioutil.ReadFile("data/ubcrmpCourse.json")
+	courseJSON, _ := ioutil.ReadFile("data/courseToinstrID.json")
 	courseData := make(Department)
 	err := json.Unmarshal(courseJSON, &courseData)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	instrJSON, _ := ioutil.ReadFile("data/ubcrmpInstr.json")
+	instrJSON, _ := ioutil.ReadFile("data/instrIDToRating.json")
 	instrData := make(Instructor)
 	err = json.Unmarshal(instrJSON, &instrData)
 	if err != nil {
