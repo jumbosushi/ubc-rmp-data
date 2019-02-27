@@ -7,7 +7,12 @@ import (
 // Start ...
 func Start() {
 	fmt.Println("=== ubc-rmp-srcaper start ===")
-	buildCourseJSON()
-	QueryRMP()
+
+	courseToInstrFileName := "courseToinstrID.json"
+	instrToRatingFileName := "instrIDToRating.json"
+
+	buildCourseJSON(courseToInstrFileName, instrToRatingFileName)
+	QueryRMP(instrToRatingFileName)
+
 	fmt.Println("=== ubc-rmp-srcaper end   ===")
 }

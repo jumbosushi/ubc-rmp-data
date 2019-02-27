@@ -60,7 +60,7 @@ func isAllowedActivity(activity string) bool {
 	return false
 }
 
-func buildCourseJSON() {
+func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string) {
 	c := colly.NewCollector(
 		colly.UserAgent("UBC-RMP Bot"),
 	)
@@ -164,7 +164,7 @@ func buildCourseJSON() {
 			instrUbcID := getInstrID(e.Attr("href"))
 
 			ubcCourseInfo[curDepartment][curCourse][curSection] = instrUbcID
-			writeJSON(ubcCourseInfo, "ubcrmpCourse.json")
+			writeJSON(ubcCourseInfo, courseToInstrFileName)
 
 			// If record already exists, skip
 			if _, ok := ubcInstrInfo[instrUbcID]; ok {
@@ -177,7 +177,7 @@ func buildCourseJSON() {
 			instrData.UbcID = instrUbcID
 
 			ubcInstrInfo[instrUbcID] = instrData
-			writeJSON(ubcInstrInfo, "ubcrmpInstr.json")
+			writeJSON(ubcInstrInfo, instrToRatingFileName)
 		}
 	})
 

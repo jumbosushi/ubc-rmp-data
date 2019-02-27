@@ -67,7 +67,7 @@ func toFixed(num float64, precision int) float64 {
 }
 
 // QueryRMP ..
-func QueryRMP() {
+func QueryRMP(instrToRatingFileName string) {
 	c := colly.NewCollector(
 		// colly.Async(true),
 		colly.UserAgent("UBC-RMP Bot"),
@@ -137,6 +137,6 @@ func QueryRMP() {
 	for _, instrData := range instrMap {
 		rmpQuery := getRmpQuery(instrData.Name, instrData.UbcID)
 		rmpSearchCollector.Visit(rmpQuery)
-		writeJSON(instrMap, "filledInstrData.json")
+		writeJSON(instrMap, instrToRatingFileName)
 	}
 }
