@@ -24,30 +24,39 @@ make
 
 Two JSON files are available under `/data`
 
-## ubcCourseInfo.json
+## courseToinstrID.json
+
 
 ```json
-#
+# Example
 {
-    "AANB": {
-        "504": {
-            "002": 1234
-            }
-        }
-    }
+  "CPSC": {
+      "100": {
+          "101": 1939284,
+          "201": 1939284
+      },
+      "103": {
+          "101": 926591,
+          "103": 657924,
+          "201": 926591,
+          "202": 926591
+      }
+  }
 }
 ```
 
-## ubcInstrInfo.json
+
+## instrIDToRating.json
 
 ```json
 {
-    "1234": {
-        "ubcid":            1234,
-        "name":             "Doe, John",
-        "difficulty":       3.5,
-        "overall":          4,
-        "would_take_again": "yes",
+    "1324945": {
+        "difficulty":        2.6,
+        "name":              "ICHIKAWA, JONATHAN",
+        "overall":           4.3,
+        "rmpid":             1676955,
+        "ubcid":             1324945,
+        "would_take_again":  "85%"
     }
 }
 ```
