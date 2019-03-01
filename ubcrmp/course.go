@@ -158,33 +158,46 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 		// ubcCourseInfo[curDepartment][curCourse][curSection] = make(model.Instructor)
 	})
 
-	sectionCollector.OnHTML("td > a[href]", func(e *colly.HTMLElement) {
-		if strings.HasPrefix(e.Attr("href"), instrPath) {
-			instrName := e.Text
-			instrUbcID := getInstrID(e.Attr("href"))
+	// For the 3rd table
+	sectionCollector.OnHTML(".table:eq(2)", func(e *colly.HTMLElement) {
+		isInstructorRow := false
 
-			// append used here since a section can have > 1 prof assigned
-			ubcCourseInfo[curDepartment][curCourse][curSection] = append(
-				ubcCourseInfo[curDepartment][curCourse][curSection],
-				instrUbcID,
-			)
-
-			// If record already exists, skip
-			if _, ok := ubcInstrInfo[instrUbcID]; ok {
-				return
+		e.ForEach("td", func(i int, td *colly.HTMLElement) {
+			if strings.Contains(td.Text, "Instructor:") {
+				isInstructorRow = true
+			} else if strings.Contains(td.Text, "TA:") {
+				isInstructorRow = false
 			}
 
-			// Init InstructorData struct per id for rmp.go to fill
-			instrData := InstructorData{}
-			instrData.Name = instrName
-			instrData.UbcID = instrUbcID
+			// If link row under Instructor
+			hrefLink := td.ChildAttr("a", "href")
+			if isInstructorRow && strings.HasPrefix(hrefLink, instrPath) {
+				instrName := td.ChildText("a")
+				instrUbcID := getInstrID(hrefLink)
 
-			ubcInstrInfo[instrUbcID] = instrData
+				// append used here since a section can have > 1 prof assigned
+				ubcCourseInfo[curDepartment][curCourse][curSection] = append(
+					ubcCourseInfo[curDepartment][curCourse][curSection],
+					instrUbcID,
+				)
 
-			// Write JSON here to store progress
-			writeJSON(ubcInstrInfo, instrToRatingFileName)
-			writeJSON(ubcCourseInfo, courseToInstrFileName)
-		}
+				// If record already exists, skip
+				if _, ok := ubcInstrInfo[instrUbcID]; ok {
+					return
+				}
+
+				// Init InstructorData struct per id for rmp.go to fill
+				instrData := InstructorData{}
+				instrData.Name = instrName
+				instrData.UbcID = instrUbcID
+
+				ubcInstrInfo[instrUbcID] = instrData
+
+				// Write JSON here to store progress
+				writeJSON(ubcInstrInfo, instrToRatingFileName)
+				writeJSON(ubcCourseInfo, courseToInstrFileName)
+			}
+		})
 	})
 
 	c.Visit(allCoursesURL)
