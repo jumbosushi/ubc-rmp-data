@@ -163,21 +163,27 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 			instrName := e.Text
 			instrUbcID := getInstrID(e.Attr("href"))
 
-			ubcCourseInfo[curDepartment][curCourse][curSection] = instrUbcID
-			writeJSON(ubcCourseInfo, courseToInstrFileName)
+			// append used here since a section can have > 1 prof assigned
+			ubcCourseInfo[curDepartment][curCourse][curSection] = append(
+				ubcCourseInfo[curDepartment][curCourse][curSection],
+				instrUbcID,
+			)
 
 			// If record already exists, skip
 			if _, ok := ubcInstrInfo[instrUbcID]; ok {
 				return
 			}
 
-			// Init InstructorData
+			// Init InstructorData struct per id for rmp.go to fill
 			instrData := InstructorData{}
 			instrData.Name = instrName
 			instrData.UbcID = instrUbcID
 
 			ubcInstrInfo[instrUbcID] = instrData
+
+			// Write JSON here to store progress
 			writeJSON(ubcInstrInfo, instrToRatingFileName)
+			writeJSON(ubcCourseInfo, courseToInstrFileName)
 		}
 	})
 

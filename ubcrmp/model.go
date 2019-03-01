@@ -14,7 +14,7 @@ type InstructorData struct {
 type Instructor map[int]InstructorData
 
 // Section ...
-type Section map[string]int
+type Section map[string][]int
 
 // Course ...
 type Course map[string]Section
