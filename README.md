@@ -4,6 +4,8 @@
 
 Scrapes [UBC Course Schedule page](https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea), and stores it as JSON to be used for [UBC-RMP Chrome extension](https://github.com/jumbosushi/ubc-rmp)
 
+Includes data for over 8200 sections with more than 3100 ratings
+
 ## Installation
 
 ```
