@@ -150,6 +150,7 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 	// sectionCollector callbacks
 
 	var curSection string
+	isInstructorRow := false
 	instrPath := "/cs/courseschedule?pname=inst"
 
 	sectionCollector.OnRequest(func(r *colly.Request) {
@@ -159,45 +160,42 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 	})
 
 	// For the 3rd table
-	sectionCollector.OnHTML(".table:eq(2)", func(e *colly.HTMLElement) {
-		isInstructorRow := false
+	sectionCollector.OnHTML("td", func(e *colly.HTMLElement) {
 
-		e.ForEach("td", func(i int, td *colly.HTMLElement) {
-			if strings.Contains(td.Text, "Instructor:") {
-				isInstructorRow = true
-			} else if strings.Contains(td.Text, "TA:") {
-				isInstructorRow = false
+		if strings.Contains(e.Text, "Instructor:") {
+			isInstructorRow = true
+		} else if strings.Contains(e.Text, "TA:") {
+			isInstructorRow = false
+		}
+
+		// If link row under Instructor
+		hrefLink := e.ChildAttr("a", "href")
+		if isInstructorRow && strings.HasPrefix(hrefLink, instrPath) {
+			instrName := e.ChildText("a")
+			instrUbcID := getInstrID(hrefLink)
+
+			// append used here since a section can have > 1 prof assigned
+			ubcCourseInfo[curDepartment][curCourse][curSection] = append(
+				ubcCourseInfo[curDepartment][curCourse][curSection],
+				instrUbcID,
+			)
+
+			// If record already exists, skip
+			if _, ok := ubcInstrInfo[instrUbcID]; ok {
+				return
 			}
 
-			// If link row under Instructor
-			hrefLink := td.ChildAttr("a", "href")
-			if isInstructorRow && strings.HasPrefix(hrefLink, instrPath) {
-				instrName := td.ChildText("a")
-				instrUbcID := getInstrID(hrefLink)
+			// Init InstructorData struct per id for rmp.go to fill
+			instrData := InstructorData{}
+			instrData.Name = instrName
+			instrData.UbcID = instrUbcID
 
-				// append used here since a section can have > 1 prof assigned
-				ubcCourseInfo[curDepartment][curCourse][curSection] = append(
-					ubcCourseInfo[curDepartment][curCourse][curSection],
-					instrUbcID,
-				)
+			ubcInstrInfo[instrUbcID] = instrData
 
-				// If record already exists, skip
-				if _, ok := ubcInstrInfo[instrUbcID]; ok {
-					return
-				}
-
-				// Init InstructorData struct per id for rmp.go to fill
-				instrData := InstructorData{}
-				instrData.Name = instrName
-				instrData.UbcID = instrUbcID
-
-				ubcInstrInfo[instrUbcID] = instrData
-
-				// Write JSON here to store progress
-				writeJSON(ubcInstrInfo, instrToRatingFileName)
-				writeJSON(ubcCourseInfo, courseToInstrFileName)
-			}
-		})
+			// Write JSON here to store progress
+			writeJSON(ubcInstrInfo, instrToRatingFileName)
+			writeJSON(ubcCourseInfo, courseToInstrFileName)
+		}
 	})
 
 	c.Visit(allCoursesURL)
