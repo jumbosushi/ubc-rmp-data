@@ -18,7 +18,6 @@ go get github.com/jumbosushi/ubc-rmp-data
 git clone git@github.com:jumbosushi/ubc-rmp-data.git
 cd ubc-rmp-data
 make
-# Start scraper
 ./bin/ubc-rmp-data
 ```
 
@@ -30,23 +29,21 @@ Two JSON files are available under `/data`
 
 
 ```json
-# Example
 {
-  "CPSC": {
-      "100": {
-          "101": 1939284,
-          "201": 1939284
-      },
-      "103": {
-          "101": 926591,
-          "103": 657924,
-          "201": 926591,
-          "202": 926591
-      }
-  }
+  "APBI": {
+    "361": {},      // No lecture section
+    "398": {
+        "001": [    // Two instructors
+            1304835,
+            1310500
+        ],
+        "002": [
+            1304835,
+            1310500
+        ]
+    },
 }
 ```
-
 
 ## instrIDToRating.json
 
