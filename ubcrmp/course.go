@@ -88,7 +88,9 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 
 	ubcInstrInfo := make(Instructor)
 	ubcCourseInfo := make(Department)
-	allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
+	// allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
+  // TODO: Make this flexible per season
+	allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?tname=subj-all-departments&sessyr=2019&sesscd=S"
 
 	departmentPath := getSubjectPath("department")
 
