@@ -135,7 +135,7 @@ func buildCourseJSON(allCoursesURL string, courseToInstrFileName string, instrTo
 
 	courseCollector.OnRequest(func(r *colly.Request) {
 		curCourse = getURLParam(r, "course")
-		fmt.Printf("  %s\n", curCourse)
+		fmt.Printf("  %s %s\n", curDepartment, curCourse)
 		ubcCourseInfo[curDepartment][curCourse] = make(Section)
 	})
 
@@ -160,7 +160,7 @@ func buildCourseJSON(allCoursesURL string, courseToInstrFileName string, instrTo
 
 	sectionCollector.OnRequest(func(r *colly.Request) {
 		curSection = getURLParam(r, "section")
-		fmt.Printf("    %s\n", curSection)
+		fmt.Printf("    %s %s %s\n", curDepartment, curCourse, curSection)
 		// ubcCourseInfo[curDepartment][curCourse][curSection] = make(model.Instructor)
 	})
 
