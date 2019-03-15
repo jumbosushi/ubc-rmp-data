@@ -88,8 +88,6 @@ func buildCourseJSON(allCoursesURL string, courseToInstrFileName string, instrTo
 
 	courseToInstrFileName = getTermFileName(allCoursesURL, courseToInstrFileName)
 	instrToRatingFileName = getTermFileName(allCoursesURL, instrToRatingFileName)
-	fmt.Print(courseToInstrFileName)
-	fmt.Print(instrToRatingFileName)
 
 	// =======================
 	// All courses page callbacks

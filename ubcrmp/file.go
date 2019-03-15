@@ -34,7 +34,7 @@ func getTermFileName(termURL string, filename string) string {
 	term := q.Get("sesscd")
 	campus := q.Get("campuscd")
 
-	return year + term + campus + filename
+	return year + "_" + term + "_" + campus + "_" + filename
 }
 
 func checkIO(e error) {
