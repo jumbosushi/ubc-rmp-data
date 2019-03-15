@@ -44,7 +44,7 @@ func Start() {
 		fmt.Printf("%s\n", str)
 	}
 
-	courseToInstrFileName := "courseToinstrID.json"
+	courseToInstrFileName := "courseToInstrID.json"
 	instrToRatingFileName := "instrIDToRating.json"
 
 	for _, allCoursesURL := range validURLs {
