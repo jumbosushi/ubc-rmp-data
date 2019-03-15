@@ -60,7 +60,7 @@ func isAllowedActivity(activity string) bool {
 	return false
 }
 
-func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string) {
+func buildCourseJSON(allCoursesURL string, courseToInstrFileName string, instrToRatingFileName string) {
 	c := colly.NewCollector(
 		colly.UserAgent("UBC-RMP Bot"),
 	)
@@ -84,13 +84,18 @@ func buildCourseJSON(courseToInstrFileName string, instrToRatingFileName string)
 	sectionCollector := c.Clone()
 
 	// =======================
+	// Update filenames based on url
+
+	courseToInstrFileName = getTermFileName(allCoursesURL, courseToInstrFileName)
+	instrToRatingFileName = getTermFileName(allCoursesURL, instrToRatingFileName)
+	fmt.Print(courseToInstrFileName)
+	fmt.Print(instrToRatingFileName)
+
+	// =======================
 	// All courses page callbacks
 
 	ubcInstrInfo := make(Instructor)
 	ubcCourseInfo := make(Department)
-	// allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-all-departments"
-  // TODO: Make this flexible per season
-	allCoursesURL := "https://courses.students.ubc.ca/cs/courseschedule?tname=subj-all-departments&sessyr=2019&sesscd=S"
 
 	departmentPath := getSubjectPath("department")
 

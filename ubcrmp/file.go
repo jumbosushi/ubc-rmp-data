@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -21,6 +22,19 @@ func writeJSON(class interface{}, fname string) {
 	jsonString, err := json.Marshal(class)
 	err = ioutil.WriteFile(fpath, jsonString, 0644)
 	checkIO(err)
+}
+
+func getTermFileName(termURL string, filename string) string {
+	u, err := url.Parse(termURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	year := q.Get("sessyr")
+	term := q.Get("sesscd")
+	campus := q.Get("campuscd")
+
+	return year + term + campus + filename
 }
 
 func checkIO(e error) {

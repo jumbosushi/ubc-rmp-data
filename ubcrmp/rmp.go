@@ -26,21 +26,14 @@ func getRmpQuery(name string, ubcID int) string {
 	return baseRmpQuery + noSpace + ubcIDParam
 }
 
-func readJSON() (Department, Instructor) {
-	courseJSON, _ := ioutil.ReadFile("data/courseToinstrID.json")
-	courseData := make(Department)
-	err := json.Unmarshal(courseJSON, &courseData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	instrJSON, _ := ioutil.ReadFile("data/instrIDToRating.json")
+func readJSON(instrToRatingFileName string) Instructor {
+	instrJSON, _ := ioutil.ReadFile("data/" + instrToRatingFileName)
 	instrData := make(Instructor)
-	err = json.Unmarshal(instrJSON, &instrData)
+	err := json.Unmarshal(instrJSON, &instrData)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return courseData, instrData
+	return instrData
 }
 
 func getTID(path string) int {
@@ -67,7 +60,7 @@ func toFixed(num float64, precision int) float64 {
 }
 
 // QueryRMP ..
-func QueryRMP(instrToRatingFileName string) {
+func QueryRMP(allCoursesURL string, instrToRatingFileName string) {
 	c := colly.NewCollector(
 		// colly.Async(true),
 		colly.UserAgent("UBC-RMP Bot"),
@@ -87,7 +80,8 @@ func QueryRMP(instrToRatingFileName string) {
 		log.Println("Something went wrong:", err)
 	})
 
-	_, instrMap := readJSON()
+	instrToRatingFileName = getTermFileName(allCoursesURL, instrToRatingFileName)
+	instrMap := readJSON(instrToRatingFileName)
 
 	rmpSearchCollector := c.Clone()
 	rmpStatsCollector := c.Clone()
