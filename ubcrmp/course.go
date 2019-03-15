@@ -43,6 +43,7 @@ func getSubjectPath(subj string) string {
 
 func isAllowedActivity(activity string) bool {
 	var allowedSectionActivity = [...]string{
+		"Lab-Seminar",
 		"Lecture",
 		"Lecture-Seminar",
 		"Lecture-Laboratory",
@@ -50,6 +51,7 @@ func isAllowedActivity(activity string) bool {
 		"Laboratory",
 		"Practicum",
 		"Seminar",
+		"Web-Oriented Course",
 	}
 
 	for _, allowed := range allowedSectionActivity {
